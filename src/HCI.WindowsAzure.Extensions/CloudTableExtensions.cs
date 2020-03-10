@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using HCI.WindowsAzure.Extensions.Common;
 using Microsoft.WindowsAzure.Storage;
@@ -68,6 +69,55 @@ namespace HCI.WindowsAzure.Extensions
             catch (StorageException)
             {
                 return Task.FromResult<TableResult>(default);
+            }
+        }
+
+        /// <summary>
+        /// Executes the <paramref name="query" /> on <paramref name="cloudTable" /> as a <see cref="TableQuerySegment{TElement}" />.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="cloudTable">       </param>
+        /// <param name="query">            </param>
+        /// <param name="cancellationToken"></param>
+        /// <exception cref="StorageException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task<IReadOnlyList<T>> ExecuteQueryAsync<T>(this CloudTable cloudTable, TableQuery<T> query, CancellationToken cancellationToken = default) where T : ITableEntity, new()
+        {
+            Guard.Null(cloudTable, nameof(cloudTable));
+            Guard.Null(query, nameof(query));
+
+            var runningQuery = new TableQuery<T>()
+            {
+                FilterString = query.FilterString,
+                SelectColumns = query.SelectColumns
+            };
+
+            var results = new List<T>();
+            TableContinuationToken token = null;
+
+            try
+            {
+                do
+                {
+                    runningQuery.TakeCount = query.TakeCount - results.Count;
+
+                    var queryResult = await cloudTable
+                        .ExecuteQuerySegmentedAsync(runningQuery, token)
+                        .ConfigureAwait(false);
+
+                    results.Capacity += queryResult.Results.Count;
+
+                    token = queryResult.ContinuationToken;
+
+                    results.AddRange(queryResult);
+                } while (token != null && !cancellationToken.IsCancellationRequested && (query.TakeCount == null || results.Count < query.TakeCount.Value));
+
+                return results;
+            }
+            catch (StorageException)
+            {
+                return default;
             }
         }
 
