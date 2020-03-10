@@ -196,24 +196,9 @@ namespace HCI.WindowsAzure.Extensions
             Guard.Null(cloudTable, nameof(cloudTable));
             Guard.Null(query, nameof(query));
 
-            TableContinuationToken token = null;
-            TableQuerySegment<T> queryResult;
-            var dataSet = new HashSet<T>();
-
             try
             {
-                do
-                {
-                    queryResult = await cloudTable
-                        .ExecuteQuerySegmentedAsync(query, token)
-                        .ConfigureAwait(false);
-
-                    dataSet.AddRange(queryResult);
-
-                    token = queryResult.ContinuationToken;
-                } while (token != null);
-
-                return dataSet.ToList();
+                return await cloudTable.ExecuteQueryAsync(query).ConfigureAwait(false);
             }
             catch (StorageException)
             {
@@ -235,24 +220,11 @@ namespace HCI.WindowsAzure.Extensions
             Guard.Null(cloudTable, nameof(cloudTable));
             Guard.Null(query, nameof(query));
 
-            TableContinuationToken token = null;
-            TableQuerySegment<T> queryResult;
-            var dataList = new List<T>();
-
             try
             {
-                do
-                {
-                    queryResult = await cloudTable
-                        .ExecuteQuerySegmentedAsync(query, token)
-                        .ConfigureAwait(false);
+                var result = await cloudTable.ExecuteQueryAsync(query).ConfigureAwait(false);
 
-                    dataList.AddRange(queryResult);
-
-                    token = queryResult.ContinuationToken;
-                } while (token != null);
-
-                return filterClause != null ? dataList.Where(filterClause).ToList() : dataList;
+                return filterClause != null ? result.Where(filterClause).ToList() : result;
             }
             catch (StorageException)
             {
@@ -276,25 +248,13 @@ namespace HCI.WindowsAzure.Extensions
             if (cloudTable is null) return Enumerable.Empty<T>();
             Guard.Null(query, nameof(query));
 
-            TableContinuationToken token = null;
-            TableQuerySegment<T> queryResult;
-            var dataSet = new HashSet<T>();
             var expressFunc = expression.Compile();
 
             try
             {
-                do
-                {
-                    queryResult = await cloudTable
-                        .ExecuteQuerySegmentedAsync(query, token)
-                        .ConfigureAwait(false);
+                var result = await cloudTable.ExecuteQueryAsync(query).ConfigureAwait(false);
 
-                    dataSet.AddRange(queryResult);
-
-                    token = queryResult.ContinuationToken;
-                } while (token != null);
-
-                return dataSet.Where(expressFunc);
+                return result.Where(expressFunc);
             }
             catch (StorageException)
             {
