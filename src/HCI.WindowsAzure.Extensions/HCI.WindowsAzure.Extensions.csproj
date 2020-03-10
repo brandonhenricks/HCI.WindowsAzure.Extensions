@@ -5,6 +5,23 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Brandon Henricks</Authors>
     <Company />
+    <PackageProjectUrl>https://github.com/brandonhenricks/HCI.WindowsAzure.Extensions</PackageProjectUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Description>C# Extension Methods for use with Windows Azure Storage.</Description>
+    <RepositoryUrl>https://github.com/brandonhenricks/HCI.WindowsAzure.Extensions</RepositoryUrl>
+    <RepositoryType>library</RepositoryType>
+    <PackageTags>csharp, dotnet, csharp-library, azure, azure-storage</PackageTags>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WindowsAzure.Storage" Version="9.3.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>
